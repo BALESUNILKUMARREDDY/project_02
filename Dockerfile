@@ -15,6 +15,10 @@ RUN apt-get update && apt-get install -y \
     libopencv-dev \
     ffmpeg \
     wget \
+    curl \
+    git \
+    unzip \
+    terraform \
     && rm -rf /var/lib/apt/lists/*
 
 # Create working directory
@@ -32,9 +36,10 @@ COPY . .
 # Create upload folder if not exists
 RUN mkdir -p static/uploads
 
-# Copy YOLO and ML model files to proper location (update paths if needed)
-# Assumes models are stored in /app/models
-RUN test -f models/yolov3.weights || wget https://pjreddie.com/media/files/yolov3.weights -P models/
+# Download YOLO model weights (if not present)
+RUN mkdir -p models && \
+    test -f models/yolov3.weights || \
+    wget https://pjreddie.com/media/files/yolov3.weights -P models/
 
 # Expose port for Flask
 EXPOSE 5000
