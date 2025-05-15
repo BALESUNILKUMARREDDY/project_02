@@ -4,7 +4,8 @@ pipeline {
     environment {
         FLASK_APP = 'app.py'
         TEST_REPORT = 'tests/test-results.xml'
-        DOCKER_IMAGE = 'my-docker-username/my-flask-ml-app'
+        DOCKER_IMAGE = 'balesunil/my-flask-ml-app:latest'
+        TF_VAR_cluster_name = 'flask-ml-cluster'
     }
 
     tools {
@@ -60,6 +61,15 @@ pipeline {
             steps {
                 withSonarQubeEnv('My SonarQube Server') {
                     sh "${SONAR_SCANNER_HOME}/bin/sonar-scanner"
+                }
+            }
+        }
+
+        stage('Terraform Init & Apply') {
+            steps {
+                dir('terraform') {
+                    sh 'terraform init'
+                    sh 'terraform apply -auto-approve'
                 }
             }
         }
