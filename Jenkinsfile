@@ -88,9 +88,11 @@ pipeline {
         }
         success {
             echo '✅ Pipeline executed successfully!'
+            slackSend(channel: '#build-alerts', message: "✅ Build Successful: ${env.JOB_NAME} [${env.BUILD_NUMBER}]")
         }
         failure {
             echo '❌ Pipeline failed.'
+            slackSend(channel: '#build-alerts', message: "❌ Build Failed: ${env.JOB_NAME} [${env.BUILD_NUMBER}]")
         }
     }
 }
