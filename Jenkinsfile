@@ -9,7 +9,7 @@ pipeline {
     }
 
     tools {
-        python 'Python 3'
+        python 'Python3'
     }
 
     stages {
