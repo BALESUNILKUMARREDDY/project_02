@@ -1,10 +1,10 @@
 provider "aws" {
-  region = var.aws_region
+  region = "eu-north-1"
 }
 
 resource "aws_instance" "app_server" {
-  ami           = var.ec2_ami
-  instance_type = var.ec2_instance_type
+  ami           = "ami-0dba2cb6798deb6d8"  # Example Ubuntu 22.04 LTS AMI in us-east-1
+  instance_type = "t3.large"
 
   tags = {
     Name = "flask-ml-app-server"
@@ -12,7 +12,10 @@ resource "aws_instance" "app_server" {
 }
 
 resource "aws_s3_bucket" "artifact_bucket" {
-  bucket = var.s3_bucket_name
+  bucket = "ml-app-static-uploads"
+}
+
+
 
   tags = {
     Name        = "flask-ml-artifacts"
@@ -21,7 +24,7 @@ resource "aws_s3_bucket" "artifact_bucket" {
 }
 
 provider "kubernetes" {
-  config_path = var.kubeconfig_path
+  config_path = kubeconfig_path = "/home/ubuntu/.kube/config"
 }
 
 resource "kubernetes_namespace" "app_namespace" {
