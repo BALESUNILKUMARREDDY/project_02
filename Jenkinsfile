@@ -8,9 +8,10 @@ pipeline {
         TF_VAR_cluster_name = 'flask-ml-cluster'
     }
 
-    tools {
-        python 'Python3'
-    }
+   tools {
+    'jenkins.plugins.shiningpanda.tools.PythonInstallation' 'Python3'
+}
+
 
     stages {
         stage('Clone Repository') {
