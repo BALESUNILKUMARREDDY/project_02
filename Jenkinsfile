@@ -16,15 +16,15 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/BALESUNILKUMARREDDY/project_02.git'
+               git branch: 'main', changelog: false, poll: false, url: 'https://github.com/BALESUNILKUMARREDDY/project_02.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'pip install --upgrade pip'
-                sh 'pip install -r requirements.txt'
-                sh 'pip install pytest selenium'
+                sh 'pip3 install --upgrade pip'
+                sh 'pip3 install -r requirements.txt'
+                sh 'pip3 install pytest selenium'
             }
         }
 
