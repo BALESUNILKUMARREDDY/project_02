@@ -1,25 +1,25 @@
 variable "aws_region" {
   description = "AWS region to deploy resources"
   type        = string
-  default     = "us-east-1"
+  default     = "eu-north-1"
 }
 
 variable "ec2_ami" {
-  description = "AMI ID for EC2 instance"
+  description = "AMI ID for EC2 instance (Ubuntu 22.04 LTS)"
   type        = string
-  default     = "ami-0c02fb55956c7d316" # Update with your preferred AMI
+  default     = "ami-0bdf93799014acdc4"
 }
 
 variable "ec2_instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t2.micro"
+  default     = "t3.large"
 }
 
 variable "s3_bucket_name" {
   description = "S3 bucket name for artifacts (must be globally unique)"
   type        = string
-  default     = "flask-ml-artifacts-1234567890"  # Change this to unique bucket name
+  default     = "ml-app-static-uploads"
 }
 
 variable "kubeconfig_path" {
@@ -37,5 +37,5 @@ variable "k8s_namespace" {
 variable "docker_image" {
   description = "Docker image with tag to deploy on Kubernetes"
   type        = string
-  default     = "my-docker-username/my-flask-ml-app:latest"
+  default     = "balesunilkumar/my-flask-ml-app:latest"
 }
