@@ -32,7 +32,7 @@ jobs:
           pip install pytest selenium
 
       - name: Run Unit Tests (pytest)
-        run: pytest tests/test_app.py
+        run: PYTHONPATH=. pytest tests/test_app.py
 
       - name: Run UI Tests (Selenium)
         env:
