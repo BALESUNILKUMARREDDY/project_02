@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.10-slim'
+            args '-u root' 
+        }
+    }
 
     environment {
         FLASK_APP = 'app.py'
@@ -15,24 +20,12 @@ pipeline {
                 git branch: 'main', changelog: false, poll: false, url: 'https://github.com/BALESUNILKUMARREDDY/project_02.git'
             }
         }
-        stage('Install Python and Dependencies') {
+
+        stage('Install Dependencies') {
             steps {
                 sh '''
-                    #!/bin/bash
-
-                    echo "Checking Python installation..."
-                    if ! command -v python3 &> /dev/null; then
-                        echo " Python3 not found. Installing..."
-                        sudo apt update && sudo apt install -y python3 python3-venv python3-pip
-                    else
-                        echo "Python3 is already installed."
-                    fi
-
-                    echo "Setting up virtual environment..."
                     python3 -m venv venv
-                    source venv/bin/activate
-
-                    echo "Upgarding pip and installing dependencies..."
+                    . venv/bin/activate
                     pip install --upgrade pip
                     pip install -r requirements.txt
                     pip install pytest selenium
@@ -40,15 +33,21 @@ pipeline {
             }
         }
 
-        stage('Run Unit Tests (Pytest)') {
+        stage('Run Unit Tests') {
             steps {
-                sh 'pytest tests/test_app.py --junitxml=$TEST_REPORT'
+                sh '''
+                    . venv/bin/activate
+                    pytest tests/test_app.py --junitxml=$TEST_REPORT
+                '''
             }
         }
 
-        stage('Run UI Tests (Selenium)') {
+        stage('Run UI Tests') {
             steps {
-                sh 'pytest tests/test_selenium.py'
+                sh '''
+                    . venv/bin/activate
+                    pytest tests/test_selenium.py
+                '''
             }
         }
 
@@ -61,8 +60,10 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                    sh "docker push $DOCKER_IMAGE"
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push $DOCKER_IMAGE
+                    '''
                 }
             }
         }
@@ -78,19 +79,23 @@ pipeline {
             }
         }
 
-        stage('Terraform Init & Apply') {
+        stage('Terraform Apply') {
             steps {
                 dir('terraform') {
-                    sh 'terraform init'
-                    sh 'terraform apply -auto-approve'
+                    sh '''
+                        terraform init
+                        terraform apply -auto-approve
+                    '''
                 }
             }
         }
 
         stage('Kubernetes Deployment') {
             steps {
-                sh 'kubectl apply -f deployment/deployment.yaml'
-                sh 'kubectl apply -f deployment/service.yaml'
+                sh '''
+                    kubectl apply -f deployment/deployment.yaml
+                    kubectl apply -f deployment/service.yaml
+                '''
             }
         }
     }
