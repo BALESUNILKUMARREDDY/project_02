@@ -8,23 +8,35 @@ pipeline {
         TF_VAR_cluster_name = 'flask-ml-cluster'
     }
 
-   tools {
-        python 'Python3'
-    }
-
-
     stages {
+
         stage('Clone Repository') {
             steps {
-               git branch: 'main', changelog: false, poll: false, url: 'https://github.com/BALESUNILKUMARREDDY/project_02.git'
+                git branch: 'main', changelog: false, poll: false, url: 'https://github.com/BALESUNILKUMARREDDY/project_02.git'
             }
         }
-
-        stage('Install Dependencies') {
+        stage('Install Python and Dependencies') {
             steps {
-                sh 'pip3 install --upgrade pip'
-                sh 'pip3 install -r requirements.txt'
-                sh 'pip3 install pytest selenium'
+                sh '''
+                    #!/bin/bash
+
+                    echo "Checking Python installation..."
+                    if ! command -v python3 &> /dev/null; then
+                        echo " Python3 not found. Installing..."
+                        sudo apt update && sudo apt install -y python3 python3-venv python3-pip
+                    else
+                        echo "Python3 is already installed."
+                    fi
+
+                    echo "Setting up virtual environment..."
+                    python3 -m venv venv
+                    source venv/bin/activate
+
+                    echo "Upgarding pip and installing dependencies..."
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                    pip install pytest selenium
+                '''
             }
         }
 
