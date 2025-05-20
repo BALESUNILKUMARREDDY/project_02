@@ -36,9 +36,9 @@ jobs:
         run: PYTHONPATH=. pytest tests/test_app.pyy
 
       - name: Run UI Tests (Selenium)
-        env:
-        if: false  
+        env: 
           SELENIUM_REMOTE_URL: http://localhost:4444/wd/hub
+          if: false
         run: pytest tests/test_selenium.py
 
       - name: SonarQube Scan
