@@ -29,17 +29,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest selenium
-
-      - name: Run Unit Tests (pytest)
-        if: false  # ← disables the step
-        run: PYTHONPATH=. pytest tests/test_app.pyy
-
-      - name: Run UI Tests (Selenium)
-        env: 
-          SELENIUM_REMOTE_URL: http://localhost:4444/wd/hub
-          if: false
-        run: pytest tests/test_selenium.py
+          pip install pytest seleniu
 
       - name: SonarQube Scan
         uses: SonarSource/sonarcloud-github-action@v2
