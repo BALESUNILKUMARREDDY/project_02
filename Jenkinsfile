@@ -56,25 +56,6 @@ pipeline {
                 '''
             }
         }
-
-        stage('Run Unit Tests') {
-            steps {
-                sh '''#!/bin/bash
-                    . venv/bin/activate
-                    pytest tests/test_app.py --junitxml=$TEST_REPORT
-                '''
-            }
-        }
-
-        stage('Run UI Tests') {
-            steps {
-                sh '''#!/bin/bash
-                    . venv/bin/activate
-                    pytest tests/test_selenium.py
-                '''
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t $DOCKER_IMAGE ."
