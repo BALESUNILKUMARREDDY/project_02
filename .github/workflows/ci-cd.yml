@@ -58,6 +58,9 @@ jobs:
           username: ${{ balesunilkumarreddy6321 }}
           password: ${{ Bale@6321 }}
 
+      - name: Build Docker image
+        run: docker build -t my-flask-ml-app
+
       - name: Push Docker Image
         run: docker tag my-flask-ml-app ${{ secrets.DOCKER_USERNAME }}/my-flask-ml-app:latest && \
              docker push ${{ secrets.DOCKER_USERNAME }}/my-flask-ml-app:latest
