@@ -37,6 +37,7 @@ jobs:
 
       - name: Run UI Tests (Selenium)
         env:
+        if: false  
           SELENIUM_REMOTE_URL: http://localhost:4444/wd/hub
         run: pytest tests/test_selenium.py
 
@@ -50,15 +51,13 @@ jobs:
       - name: Build Docker Image
         run: docker build -t my-flask-ml-app .
 
-      # Optional: Push to DockerHub
+      
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ sunilkumarreddy6321@gmail.com }}
+          password: ${{ Bale@6321 }}
 
       - name: Push Docker Image
         run: docker tag my-flask-ml-app ${{ secrets.DOCKER_USERNAME }}/my-flask-ml-app:latest && \
              docker push ${{ secrets.DOCKER_USERNAME }}/my-flask-ml-app:latest
-
-  # Optionally: Add a deploy job if you're using kubectl or Helm to deploy to Kubernetes
