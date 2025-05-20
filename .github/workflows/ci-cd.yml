@@ -1,0 +1,63 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    services:
+      selenium:
+        image: selenium/standalone-chrome
+        ports:
+          - 4444:4444
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest selenium
+
+      - name: Run Unit Tests (pytest)
+        run: pytest tests/test_app.py
+
+      - name: Run UI Tests (Selenium)
+        env:
+          SELENIUM_REMOTE_URL: http://localhost:4444/wd/hub
+        run: pytest tests/test_selenium.py
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          projectBaseDir: .
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Build Docker Image
+        run: docker build -t my-flask-ml-app .
+
+      # Optional: Push to DockerHub
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push Docker Image
+        run: docker tag my-flask-ml-app ${{ secrets.DOCKER_USERNAME }}/my-flask-ml-app:latest && \
+             docker push ${{ secrets.DOCKER_USERNAME }}/my-flask-ml-app:latest
+
+  # Optionally: Add a deploy job if you're using kubectl or Helm to deploy to Kubernetes
