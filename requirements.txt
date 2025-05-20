@@ -2,7 +2,7 @@ Flask==2.3.2
 tensorflow==2.15.0
 keras==2.15.0
 opencv-python-headless==4.11.0.86
-numpy==1.24.4
+numpy==1.24.3
 Werkzeug==2.3.7
 selenium==4.21.0
 pytest==8.1.1
