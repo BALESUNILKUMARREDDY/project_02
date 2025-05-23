@@ -5,6 +5,53 @@ FROM python:3.10-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+pipeline {
+    agent {
+        docker {
+            image 'python:3.10-slim'
+            args '-u root'  // runs as root to allow package installs
+        }
+    }
+
+    stages {
+        stage('Ensure Python Tools Are Available') {
+            steps {
+                sh '''
+                    echo "Checking Python and pip..."
+
+                    if ! command -v python3 &> /dev/null; then
+                        echo "Python3 is not available. This image may be broken."
+                        exit 1
+                    fi
+
+                    if ! command -v pip3 &> /dev/null; then
+                        echo "pip3 not found. Installing..."
+                        apt update && apt install -y python3-pip
+                    fi
+
+                    python3 --version
+                    pip3 --version
+                '''
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                    echo "Creating virtual environment..."
+                    python3 -m venv venv
+
+                    echo "Activating venv and installing dependencies..."
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                '''
+            }
+        }
+    }
+}
+
+
 # Install OS-level dependencies (excluding terraform here)
 RUN apt-get update && apt-get install -y \
     build-essential \
