@@ -8,7 +8,6 @@ pipeline {
 
     environment {
         FLASK_APP = 'app.py'
-        TEST_REPORT = 'tests/test-results.xml'
         DOCKER_IMAGE = 'balesunil/my-flask-ml-app:latest'
         TF_VAR_cluster_name = 'flask-ml-cluster'
     }
@@ -17,45 +16,20 @@ pipeline {
 
         stage('Clone Repository') {
             steps {
-                git branch: 'main', changelog: false, poll: false, url: 'https://github.com/BALESUNILKUMARREDDY/project_02.git'
-            }
-        }
-
-        stage('Ensure Python Tools Are Available') {
-            steps {
-                sh '''#!/bin/bash
-                    echo "Checking Python and pip..."
-                    
-                    if ! command -v python3 &> /dev/null; then
-                        echo " Python3 is not available. This image may be broken."
-                        exit 1
-                    fi
-                    
-                    if ! command -v pip3 &> /dev/null; then
-                        echo "pip3 not found. Installing..."
-                        apt update && apt install -y python3-pip
-                    fi
-                    
-                    python3 --version
-                    pip3 --version
-                '''
+                git branch: 'main', url: 'https://github.com/BALESUNILKUMARREDDY/project_02.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh '''#!/bin/bash
-                    echo "Creating virtual environment..."
-                    python3 -m venv venv
-
-                    echo " Activating venv and installing dependencies..."
-                    . venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                    pip install pytest selenium
+                sh '''
+                    apt update && apt install -y python3-pip
+                    pip3 install --upgrade pip
+                    pip3 install -r requirements.txt
                 '''
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t $DOCKER_IMAGE ."
@@ -65,7 +39,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''#!/bin/bash
+                    sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                         docker push $DOCKER_IMAGE
                     '''
@@ -79,9 +53,7 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv('My SonarQube Server') {
-                    sh '''#!/bin/bash
-                        ${SONAR_SCANNER_HOME}/bin/sonar-scanner
-                    '''
+                    sh '${SONAR_SCANNER_HOME}/bin/sonar-scanner'
                 }
             }
         }
@@ -89,7 +61,7 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 dir('terraform') {
-                    sh '''#!/bin/bash
+                    sh '''
                         terraform init
                         terraform apply -auto-approve
                     '''
@@ -99,7 +71,7 @@ pipeline {
 
         stage('Kubernetes Deployment') {
             steps {
-                sh '''#!/bin/bash
+                sh '''
                     kubectl apply -f deployment/deployment.yaml
                     kubectl apply -f deployment/service.yaml
                 '''
@@ -108,9 +80,6 @@ pipeline {
     }
 
     post {
-        always {
-            junit '**/tests/test-results.xml'
-        }
         success {
             echo '✅ Pipeline executed successfully!'
             slackSend(channel: '#build-alerts', message: "✅ Build Successful: ${env.JOB_NAME} [${env.BUILD_NUMBER}]")
