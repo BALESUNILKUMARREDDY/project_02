@@ -1,10 +1,10 @@
 version: 1.0
 runtime: python3
+
 build:
   commands:
-    - pip install --upgrade pip
+    - python -m pip install --upgrade pip
     - pip uninstall -y opencv-python opencv-contrib-python
-    - pip install opencv-python==4.7.0.72 opencv-contrib-python==4.7.0.72
     - pip install -r requirements.txt
     - mkdir -p models
     - wget -nc https://pjreddie.com/media/files/yolov3.cfg -P models/
@@ -12,4 +12,4 @@ build:
     - mkdir -p static/uploads
 
 run:
-  command: python app.py
+  command: gunicorn app:app --bind 0.0.0.0:$PORT --workers 4
