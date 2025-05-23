@@ -1,86 +1,54 @@
-pipeline {
-    agent any
+# Use an official Python base image
+FROM python:3.10-slim
 
-    environment {
-        FLASK_APP = 'app.py'
-        TEST_REPORT = 'tests/test-results.xml'
-        DOCKER_IMAGE = 'my-docker-username/my-flask-ml-app'
-    }
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-    tools {
-        python 'Python 3'
-    }
+# Install OS-level dependencies (excluding terraform here)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libopencv-dev \
+    ffmpeg \
+    wget \
+    curl \
+    git \
+    unzip \
+    gnupg \
+    lsb-release \
+    && rm -rf /var/lib/apt/lists/*
 
-    stages {
-        stage('Clone Repository') {
-            steps {
-                git 'https://github.com/BALESUNILKUMARREDDY/project_02.git'
-            }
-        }
+# Add HashiCorp official repo and install Terraform
+RUN wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor > /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/hashicorp.list \
+    && apt-get update \
+    && apt-get install -y terraform \
+    && rm -rf /var/lib/apt/lists/*
 
-        stage('Install Dependencies') {
-            steps {
-                sh 'pip install --upgrade pip'
-                sh 'pip install -r requirements.txt'
-                sh 'pip install pytest selenium'
-            }
-        }
+# Set the working directory
+WORKDIR /app
 
-        stage('Run Unit Tests (Pytest)') {
-            steps {
-                sh 'pytest tests/test_app.py --junitxml=$TEST_REPORT'
-            }
-        }
+# Copy requirements file and install Python dependencies
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-        stage('Run UI Tests (Selenium)') {
-            steps {
-                sh 'pytest tests/test_selenium.py'
-            }
-        }
+# Copy the entire project into the image
+COPY . .
 
-        stage('Build Docker Image') {
-            steps {
-                sh "docker build -t $DOCKER_IMAGE ."
-            }
-        }
+# Ensure uploads directory exists
+RUN mkdir -p static/uploads
 
-        stage('Push Docker Image') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                    sh "docker push $DOCKER_IMAGE"
-                }
-            }
-        }
+# Download YOLO model weights if not already present
+RUN mkdir -p models && \
+    test -f models/yolov3.weights || \
+    wget https://pjreddie.com/media/files/yolov3.weights -P models/
 
-        stage('SonarQube Analysis') {
-            environment {
-                SONAR_SCANNER_HOME = tool 'SonarQube Scanner'
-            }
-            steps {
-                withSonarQubeEnv('My SonarQube Server') {
-                    sh "${SONAR_SCANNER_HOME}/bin/sonar-scanner"
-                }
-            }
-        }
+# Expose the Flask default port
+EXPOSE 5000
 
-        stage('Kubernetes Deployment') {
-            steps {
-                sh 'kubectl apply -f deployment/deployment.yaml'
-                sh 'kubectl apply -f deployment/service.yaml'
-            }
-        }
-    }
-
-    post {
-        always {
-            junit '**/tests/test-results.xml'
-        }
-        success {
-            echo '✅ Pipeline executed successfully!'
-        }
-        failure {
-            echo '❌ Pipeline failed.'
-        }
-    }
-}
+# Command to run the application
+CMD ["python", "app.py"]
