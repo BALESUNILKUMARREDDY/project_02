@@ -39,22 +39,6 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('My SonarQube Server') {
-                    sh '''#!/bin/bash
-                        if ! command -v sonar-scanner &> /dev/null; then
-                            echo "Installing SonarQube Scanner..."
-                            wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-                            unzip sonar-scanner-cli-5.0.1.3006-linux.zip
-                            export PATH=$PWD/sonar-scanner-5.0.1.3006-linux/bin:$PATH
-                        fi
-                        sonar-scanner
-                    '''
-                }
-            }
-        }
-
         stage('Terraform Apply') {
             steps {
                 dir('terraform') {
