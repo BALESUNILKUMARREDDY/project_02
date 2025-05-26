@@ -39,6 +39,33 @@ pipeline {
             }
         }
 
+        stage('Run Docker Container') {
+            steps {
+                sh '''#!/bin/bash
+                    echo "Running container from image: $DOCKER_IMAGE"
+                    docker run --rm -d -p 5000:5000 --name flask_app_container $DOCKER_IMAGE
+                    sleep 10
+                    docker ps
+                '''
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('My SonarQube Server') {
+                    sh '''#!/bin/bash
+                        if ! command -v sonar-scanner &> /dev/null; then
+                            echo "Installing SonarQube Scanner..."
+                            wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+                            unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+                            export PATH=$PWD/sonar-scanner-5.0.1.3006-linux/bin:$PATH
+                        fi
+                        sonar-scanner
+                    '''
+                }
+            }
+        }
+
         stage('Terraform Apply') {
             steps {
                 dir('terraform') {
@@ -69,7 +96,7 @@ pipeline {
 
     post {
         always {
-            junit '**/tests/test-results.xml'
+            junit '/tests/test-results.xml'
         }
         success {
             echo '✅ Pipeline executed successfully!'
@@ -78,6 +105,6 @@ pipeline {
         failure {
             echo '❌ Pipeline failed.'
             slackSend(channel: '#build-alerts', message: "❌ Build Failed: ${env.JOB_NAME} [${env.BUILD_NUMBER}]")
-        }
-    }
+        }
+    }
 }
