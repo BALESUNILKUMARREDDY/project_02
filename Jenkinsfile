@@ -39,6 +39,21 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+    steps {
+        withSonarQubeEnv('MySonarQubeServer') { 
+            sh '''
+                sonar-scanner \
+                -Dsonar.projectKey=my_flask_ml_app \
+                -Dsonar.projectName="My Flask ML App" \
+                -Dsonar.sources=. \
+                -Dsonar.python.version=3
+            '''
+        }
+    }
+}
+
+
         stage('Terraform Apply') {
             steps {
                 dir('terraform') {
