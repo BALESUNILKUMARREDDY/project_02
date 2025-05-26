@@ -24,10 +24,7 @@ pipeline {
             }
             steps {
                 sh '''#!/bin/bash
-                    echo "Creating virtual environment..."
                     python3 -m venv venv
-
-                    echo "Activating venv and installing dependencies..."
                     . venv/bin/activate
                     pip install --upgrade pip
                     pip install -r requirements.txt
@@ -42,24 +39,18 @@ pipeline {
             }
         }
 
-        stage('Push Docker Image') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push $DOCKER_IMAGE
-                    '''
-                }
-            }
-        }
-
         stage('SonarQube Analysis') {
-            environment {
-                SONAR_SCANNER_HOME = tool 'SonarQube Scanner'
-            }
             steps {
                 withSonarQubeEnv('My SonarQube Server') {
-                    sh '${SONAR_SCANNER_HOME}/bin/sonar-scanner'
+                    sh '''#!/bin/bash
+                        if ! command -v sonar-scanner &> /dev/null; then
+                            echo "Installing SonarQube Scanner..."
+                            wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+                            unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+                            export PATH=$PWD/sonar-scanner-5.0.1.3006-linux/bin:$PATH
+                        fi
+                        sonar-scanner
+                    '''
                 }
             }
         }
@@ -77,7 +68,14 @@ pipeline {
 
         stage('Kubernetes Deployment') {
             steps {
-                sh '''
+                sh '''#!/bin/bash
+                    if ! command -v kubectl &> /dev/null; then
+                        echo "Installing kubectl..."
+                        curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                        chmod +x kubectl
+                        mv kubectl /usr/local/bin/
+                    fi
+
                     kubectl apply -f deployment/deployment.yaml
                     kubectl apply -f deployment/service.yaml
                 '''
