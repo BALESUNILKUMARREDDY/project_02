@@ -5,7 +5,7 @@ FROM python:3.10-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Install OS-level dependencies (excluding terraform here)
+# Install OS-level dependencies (including for OpenCV and Terraform)
 RUN apt-get update && apt-get install -y \
     build-essential \
     libglib2.0-0 \
@@ -42,12 +42,10 @@ COPY . .
 # Ensure uploads directory exists
 RUN mkdir -p static/uploads
 
-# Download YOLO model weights and config if not already present
-RUN mkdir -p models && \
-    test -f models/yolov3.weights || \
-    wget https://pjreddie.com/media/files/yolov3.weights -P models/ && \
-    test -f models/yolov3.cfg || \
-    wget https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg -P models/
+# Remove old & download YOLO files (clean and safe)
+RUN rm -rf models && mkdir -p models && \
+    wget -O models/yolov3.weights https://pjreddie.com/media/files/yolov3.weights && \
+    wget -O models/yolov3.cfg https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg
 
 # Expose the Flask default port
 EXPOSE 5000
