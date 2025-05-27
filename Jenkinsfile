@@ -5,7 +5,6 @@ pipeline {
         FLASK_APP = 'app.py'
         TEST_REPORT = 'tests/test-results.xml'
         DOCKER_IMAGE = 'balesunil/my-flask-ml-app:latest'
-        TF_VAR_cluster_name = 'flask-ml-cluster'
     }
 
     stages {
@@ -39,46 +38,9 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('Run Docker Container') {
             steps {
-                withSonarQubeEnv('My SonarQube Server') {
-                    sh '''#!/bin/bash
-                        if ! command -v sonar-scanner &> /dev/null; then
-                            echo "Installing SonarQube Scanner..."
-                            wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-                            unzip sonar-scanner-cli-5.0.1.3006-linux.zip
-                            export PATH=$PWD/sonar-scanner-5.0.1.3006-linux/bin:$PATH
-                        fi
-                        sonar-scanner
-                    '''
-                }
-            }
-        }
-
-        stage('Terraform Apply') {
-            steps {
-                dir('terraform') {
-                    sh '''
-                        terraform init
-                        terraform apply -auto-approve
-                    '''
-                }
-            }
-        }
-
-        stage('Kubernetes Deployment') {
-            steps {
-                sh '''#!/bin/bash
-                    if ! command -v kubectl &> /dev/null; then
-                        echo "Installing kubectl..."
-                        curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-                        chmod +x kubectl
-                        mv kubectl /usr/local/bin/
-                    fi
-
-                    kubectl apply -f deployment/deployment.yaml
-                    kubectl apply -f deployment/service.yaml
-                '''
+                sh "docker run -d -p 5000:5000 $DOCKER_IMAGE"
             }
         }
     }
