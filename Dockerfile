@@ -1,4 +1,3 @@
-
 # Use an official Python base image
 FROM python:3.10-slim
 
@@ -43,10 +42,12 @@ COPY . .
 # Ensure uploads directory exists
 RUN mkdir -p static/uploads
 
-# Download YOLO model weights if not already present
+# Download YOLO model weights and config if not already present
 RUN mkdir -p models && \
     test -f models/yolov3.weights || \
-    wget https://pjreddie.com/media/files/yolov3.weights -P models/
+    wget https://pjreddie.com/media/files/yolov3.weights -P models/ && \
+    test -f models/yolov3.cfg || \
+    wget https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg -P models/
 
 # Expose the Flask default port
 EXPOSE 5000
