@@ -85,7 +85,7 @@ pipeline {
 
     post {
         always {
-            junit '/tests/test-results.xml'
+            junit 'tests/test-results.xml'
         }
         success {
             echo '✅ Pipeline executed successfully!'
@@ -95,5 +95,5 @@ pipeline {
             echo '❌ Pipeline failed.'
             slackSend(channel: '#build-alerts', message: "❌ Build Failed: ${env.JOB_NAME} [${env.BUILD_NUMBER}]")
         }
-    }
+    }
 }
