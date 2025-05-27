@@ -39,17 +39,6 @@ pipeline {
             }
         }
 
-        stage('Run Docker Container') {
-            steps {
-                sh '''#!/bin/bash
-                    echo "Running container from image: $DOCKER_IMAGE"
-                    docker run --rm -d -p 5000:5000 --name flask_app_container $DOCKER_IMAGE
-                    sleep 10
-                    docker ps
-                '''
-            }
-        }
-
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('My SonarQube Server') {
