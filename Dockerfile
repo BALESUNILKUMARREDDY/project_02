@@ -1,39 +1,40 @@
-FROM python:3.10-slim
+# Use Windows Server Core as base image
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
 
-# Environment setup
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 `
+    PYTHONUNBUFFERED=1 `
+    PYTHON_VERSION=3.10.11
 
-# Install OpenCV and other system dependencies
-RUN apt update && apt install -y --no-install-recommends \
-    python3-opencv \
-    libopencv-dev \
-    ffmpeg \
-    wget \
-    curl \
-    git \
-    unzip \
-    && apt clean && rm -rf /var/lib/apt/lists/*
+# Install Python
+RUN powershell -Command `
+    Invoke-WebRequest -Uri https://www.python.org/ftp/python/%PYTHON_VERSION%/python-%PYTHON_VERSION%-amd64.exe -OutFile python-installer.exe ; `
+    Start-Process python-installer.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -NoNewWindow -Wait ; `
+    Remove-Item -Force python-installer.exe
 
-# Optional: pip-based OpenCV for Python-specific features
-RUN pip install --no-cache-dir opencv-python opencv-contrib-python
+# Verify Python installed
+RUN python --version
 
-# Set working directory
+# Install pip packages
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Create workdir
 WORKDIR /app
 
-# Copy codebase
+# Copy app files
 COPY . .
 
-# Ensure uploads folder exists
-RUN mkdir -p static/uploads
+# Make uploads directory
+RUN mkdir static\uploads
 
-# Download YOLO model files
-RUN rm -rf models && mkdir -p models && \
-    wget -O models/yolov3.weights https://pjreddie.com/media/files/yolov3.weights && \
-    wget -O models/yolov3.cfg https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg
+# Download YOLOv3 weights and config
+RUN powershell -Command `
+    Invoke-WebRequest -Uri https://pjreddie.com/media/files/yolov3.weights -OutFile models\yolov3.weights ; `
+    Invoke-WebRequest -Uri https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg -OutFile models\yolov3.cfg
 
 # Expose Flask port
 EXPOSE 5000
 
-# Start the Flask application
+# Run the app
 CMD ["python", "app.py"]
