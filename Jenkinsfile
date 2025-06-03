@@ -4,36 +4,33 @@ pipeline {
     environment {
         FLASK_APP = 'app.py'
         DOCKER_IMAGE = 'balesunil/my-flask-ml-app:latest'
+        REPO_PATH = '/home/ubuntu/app/project_02'
     }
 
     stages {
-        stage('Clone Repository') {
-            steps {
-                git branch: 'main', changelog: false, poll: false, url: 'https://github.com/BALESUNILKUMARREDDY/project_02.git'
-            }
-        }
+        // Removed Clone stage since repo is already cloned
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t $DOCKER_IMAGE ."
+                sh """
+                    sudo su - ubuntu -c '
+                        cd $REPO_PATH
+                        docker build -t $DOCKER_IMAGE .
+                    '
+                """
             }
         }
 
         stage('Run Docker Container (Local)') {
             steps {
-                sh '''
-                    # Stop any previous container if running
-                    docker rm -f flask-app || true
-
-                    # Run in detached mode and map port 5000
-                    docker run -d --name flask-app -p 5000:5000 $DOCKER_IMAGE
-
-                    # Optional: Wait a few seconds to make sure the app is up
-                    sleep 10
-
-                    # Optional: Check if it's reachable
-                    curl -f http://localhost:5000 || echo "⚠️ Flask app not reachable!"
-                '''
+                sh """
+                    sudo su - ubuntu -c '
+                        docker rm -f flask-app || true
+                        docker run -d --name flask-app -p 5000:5000 $DOCKER_IMAGE
+                        sleep 10
+                        curl -f http://localhost:5000 || echo "⚠️ Flask app not reachable!"
+                    '
+                """
             }
         }
 
@@ -45,8 +42,10 @@ pipeline {
                     passwordVariable: 'DOCKER_PASSWORD'
                 )]) {
                     sh """
-                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                        docker push $DOCKER_IMAGE
+                        sudo su - ubuntu -c '
+                            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                            docker push $DOCKER_IMAGE
+                        '
                     """
                 }
             }
@@ -55,14 +54,13 @@ pipeline {
 
     post {
         success {
-            echo '✅ Docker image pushed and container is running!'
+            echo '✅ Docker image pushed and container running!'
         }
         failure {
             echo '❌ Pipeline failed.'
         }
         always {
-            // Clean up container after job finishes
-            sh "docker rm -f flask-app || true"
+            sh "sudo su - ubuntu -c 'docker rm -f flask-app || true'"
         }
     }
 }
