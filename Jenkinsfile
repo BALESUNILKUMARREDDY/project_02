@@ -19,21 +19,30 @@ pipeline {
             }
         }
 
-        stage('Run Docker Container') {
+        stage('Push Docker Image to Docker Hub') {
             steps {
-                sh "docker run -d -p 5000:5000 $DOCKER_IMAGE"
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials', // Replace with your actual credentials ID
+                    usernameVariable: 'DOCKER_USERNAME',
+                    passwordVariable: 'DOCKER_PASSWORD'
+                )]) {
+                    sh """
+                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                        docker push $DOCKER_IMAGE
+                    """
+                }
             }
         }
     }
 
     post {
         success {
-            echo '✅ Pipeline executed successfully!'
-            // slackSend(channel: '#build-alerts', message: "✅ Build Successful: ${env.JOB_NAME} [${env.BUILD_NUMBER}]")
+            echo '✅ Docker image pushed successfully!'
+            // slackSend(channel: '#build-alerts', message: "✅ Docker Push Successful: ${env.JOB_NAME} [${env.BUILD_NUMBER}]")
         }
         failure {
             echo '❌ Pipeline failed.'
-            // slackSend(channel: '#build-alerts', message: "❌ Build Failed: ${env.JOB_NAME} [${env.BUILD_NUMBER}]")
+            // slackSend(channel: '#build-alerts', message: "❌ Docker Push Failed: ${env.JOB_NAME} [${env.BUILD_NUMBER}]")
         }
     }
 }
