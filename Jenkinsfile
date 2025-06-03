@@ -19,10 +19,28 @@ pipeline {
             }
         }
 
+        stage('Run Docker Container (Local)') {
+            steps {
+                sh '''
+                    # Stop any previous container if running
+                    docker rm -f flask-app || true
+
+                    # Run in detached mode and map port 5000
+                    docker run -d --name flask-app -p 5000:5000 $DOCKER_IMAGE
+
+                    # Optional: Wait a few seconds to make sure the app is up
+                    sleep 10
+
+                    # Optional: Check if it's reachable
+                    curl -f http://localhost:5000 || echo "⚠️ Flask app not reachable!"
+                '''
+            }
+        }
+
         stage('Push Docker Image to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-credentials', // Replace with your actual credentials ID
+                    credentialsId: 'dockerhub-credentials',
                     usernameVariable: 'DOCKER_USERNAME',
                     passwordVariable: 'DOCKER_PASSWORD'
                 )]) {
@@ -37,12 +55,14 @@ pipeline {
 
     post {
         success {
-            echo '✅ Docker image pushed successfully!'
-            // slackSend(channel: '#build-alerts', message: "✅ Docker Push Successful: ${env.JOB_NAME} [${env.BUILD_NUMBER}]")
+            echo '✅ Docker image pushed and container is running!'
         }
         failure {
             echo '❌ Pipeline failed.'
-            // slackSend(channel: '#build-alerts', message: "❌ Docker Push Failed: ${env.JOB_NAME} [${env.BUILD_NUMBER}]")
+        }
+        always {
+            // Clean up container after job finishes
+            sh "docker rm -f flask-app || true"
         }
     }
 }
