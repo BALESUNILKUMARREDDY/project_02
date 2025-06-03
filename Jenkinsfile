@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         FLASK_APP = 'app.py'
-        DOCKER_IMAGE = 'balesunil/my-flask-ml-app:latest'
+        DOCKER_IMAGE = 'balesunilkumarreddy6321/my-flask-ml-app:latest'
         REPO_PATH = '/home/ubuntu/app/project_02'
     }
 
