@@ -7,7 +7,7 @@ pipeline {
         REPO_PATH = '/home/ubuntu/app/project_02'
     }
 
-    stages {
+  /*  stages {
         // Removed Clone stage since repo is already cloned
 
         stage('Build Docker Image') {
@@ -50,7 +50,7 @@ pipeline {
                 }
             }
         }
-
+*/
         stage('Deploy to Kubernetes') {
             steps {
                 sh """
