@@ -50,11 +50,24 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh """
+                    sudo su - ubuntu -c '
+                        cd $REPO_PATH
+                        kubectl apply -f deployment.yaml
+                        kubectl apply -f service.yaml
+                        kubectl rollout status deployment/flask-deployment
+                    '
+                """
+            }
+        }
     }
 
     post {
         success {
-            echo '✅ Docker image pushed and container running!'
+            echo '✅ Docker image pushed and deployed to Kubernetes!'
         }
         failure {
             echo '❌ Pipeline failed.'
