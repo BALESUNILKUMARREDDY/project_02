@@ -56,8 +56,8 @@ pipeline {
                 sh """
                     sudo su - ubuntu -c '
                         cd $REPO_PATH
-                        kubectl apply -f deployment.yaml
-                        kubectl apply -f service.yaml
+                        kubectl apply -f deployment/deployment.yaml
+                        kubectl apply -f deployment/service.yaml
                         kubectl rollout status deployment/flask-deployment
                     '
                 """
