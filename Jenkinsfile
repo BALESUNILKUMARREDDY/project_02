@@ -54,10 +54,9 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh """
-                    sudo su - '
-                        cd $REPO_PATH
-                        kubectl apply -f deployment/deployment.yaml
-                        kubectl apply -f deployment/service.yaml
+                    sudo su - 
+                        cd /root
+                        kubectl apply -f lok.yaml
                         kubectl rollout status deployment/flask-deployment
                     '
                 """
