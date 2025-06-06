@@ -19,19 +19,7 @@ spec:
         - name: flask-ml-container
           image: balesunilkumarreddy6321/my-flask-ml-app
           ports:
-            - containerPort: 5000
+            - containerPort: 5001
           env:
             - name: FLASK_ENV
               value: "production"
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 5000
-            initialDelaySeconds: 10
-            periodSeconds: 5
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 5000
-            initialDelaySeconds: 15
-            periodSeconds: 20
