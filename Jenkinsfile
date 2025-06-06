@@ -54,7 +54,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh """
-                    sudo su - ubuntu -c '
+                    sudo su - '
                         cd $REPO_PATH
                         kubectl apply -f deployment/deployment.yaml
                         kubectl apply -f deployment/service.yaml
