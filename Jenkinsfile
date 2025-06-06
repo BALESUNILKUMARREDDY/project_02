@@ -55,8 +55,8 @@ pipeline {
             steps {
                 sh """
                     sudo su - ubuntu -c '
-                        kubectl apply -f deployment/deployment.yaml
-                        kubectl apply -f deployment/service.yaml
+                    cd $REPO_PATH
+                        kubectl apply -f deploy.yaml
                     '
                 """
             }
