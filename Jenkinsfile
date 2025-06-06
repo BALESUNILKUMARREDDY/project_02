@@ -58,7 +58,6 @@ pipeline {
                         cd $REPO_PATH
                         kubectl apply -f deployment/deployment.yaml
                         kubectl apply -f deployment/service.yaml
-                        kubectl rollout status deployment/flask-deployment
                     '
                 """
             }
